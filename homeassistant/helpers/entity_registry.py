@@ -63,6 +63,8 @@ class RegistryEntry:
             )
         ),
     )
+    capabilities: Dict[str, Any] = attr.ib(factory=dict)
+    supported_features: int = attr.ib(default=0)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -144,6 +146,8 @@ class EntityRegistry:
         device_id=None,
         known_object_ids=None,
         disabled_by=None,
+        capabilities=None,
+        supported_features=None,
     ):
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -157,6 +161,8 @@ class EntityRegistry:
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
+                capabilities=capabilities or _UNDEF,
+                supported_features=supported_features or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -184,6 +190,8 @@ class EntityRegistry:
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
+            capabilities=capabilities or {},
+            supported_features=supported_features or 0,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -247,6 +255,8 @@ class EntityRegistry:
         device_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
+        capabilities=_UNDEF,
+        supported_features=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -258,6 +268,8 @@ class EntityRegistry:
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
             ("disabled_by", disabled_by),
+            ("capabilities", capabilities),
+            ("supported_features", supported_features),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -330,6 +342,8 @@ class EntityRegistry:
                     platform=entity["platform"],
                     name=entity.get("name"),
                     disabled_by=entity.get("disabled_by"),
+                    capabilities=entity.get("capabilities") or {},
+                    supported_features=entity.get("supported_features", 0),
                 )
 
         self.entities = entities
@@ -353,6 +367,8 @@ class EntityRegistry:
                 "platform": entry.platform,
                 "name": entry.name,
                 "disabled_by": entry.disabled_by,
+                "capabilities": entry.capabilities,
+                "supported_features": entry.supported_features,
             }
             for entry in self.entities.values()
         ]

@@ -91,7 +91,14 @@ async def test_loading_saving_data(hass, registry):
 
     orig_entry1 = registry.async_get_or_create("light", "hue", "1234")
     orig_entry2 = registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=mock_config
+        "light",
+        "hue",
+        "5678",
+        device_id="mock-dev-id",
+        config_entry=mock_config,
+        capabilities={"max": 100},
+        supported_features=5,
+        disabled_by=entity_registry.DISABLED_HASS,
     )
 
     assert len(registry.entities) == 2
@@ -104,12 +111,15 @@ async def test_loading_saving_data(hass, registry):
     # Ensure same order
     assert list(registry.entities) == list(registry2.entities)
     new_entry1 = registry.async_get_or_create("light", "hue", "1234")
-    new_entry2 = registry.async_get_or_create(
-        "light", "hue", "5678", config_entry=mock_config
-    )
+    new_entry2 = registry.async_get_or_create("light", "hue", "5678")
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
+
+    assert new_entry2.device_id == "mock-dev-id"
+    assert new_entry2.disabled_by == entity_registry.DISABLED_HASS
+    assert new_entry2.capabilities == {"max": 100}
+    assert new_entry2.supported_features == 5
 
 
 def test_generate_entity_considers_registered_entities(registry):
